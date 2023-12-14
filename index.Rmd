@@ -1,0 +1,175 @@
+---
+title: "AFDMD-111 Estadística"
+subtitle: "Lectura de archivos en R"
+author: "Armando Patricio Piña Canul"
+date: "20/09/2023"
+output:
+  rmdformats::material:
+    highlight: kate
+    cards: false
+---
+
+
+```{r knitr_init, echo=FALSE, message=TRUE, cache=FALSE, warnings=F}
+library(knitr)
+library(rmdformats)
+
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=TRUE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+
+# Lectura de archivos en R
+
+`R` puede leer una gran cantidad de archivos incluyendo archivos `.txt`, `.csv`, `.xls`, `.pdf`, etc. Mediante el uso del paquete `tabulizer` se pueden leer tablas que se encuentran en documentos `PDF`. En la siguiente actividad se instalará y cargará el paquete `tabulizer` mediante los comandos:
+
+
+```{r, eval=FALSE}
+install.packages("tabulizer", dependencies = TRUE)   # Instala tabulizer
+library(tabulizer)                                   # Carga tabulizer
+```
+
+Posteriormente se leerá la tabla localizada en el archivo `seccion_calificacionesmsosa247.pdf` que se encuentra en la sección de **archivos** del *Teams* (lo anterior se puede hacer mediante el comando `extract_tables` del tabulizer). Una vez cargada la tabla que se llamará `tablaAlumnos` se realizarán las siguientes actividades:
+
+#### Extrayendo datos
+```{r}
+pdf_path <- "F:/ESTADISTICA/TAREAS FINALIZADAS/TAREA 3 - 20_SEP - lectura de archivos/seccion_calificacionesmsosa247.pdf" # Aqui se pone la ubicación del archivo
+resultados <- extract_tables(pdf_path)
+tablaAlumnos <- as.data.frame(resultados[[1]])
+print(tablaAlumnos)
+```
+
+# Ejercicios PDF
+
+1.- Graficar `No` contra `Parcial 1`.
+```{r, eval=TRUE}
+datos <- tablaAlumnos
+plot(datos$V1, datos$V4, main = "Calificaciones Parcial 1", xlab = "No", ylab = "Parcial 1")
+```
+
+2.- Graficar `No` contra `Parcial 2`.
+```{r, eval=TRUE}
+datos <- tablaAlumnos
+plot(datos$V1, datos$V5, main = "Calificaciones Parcial 2", xlab = "No", ylab = "Parcial 2")
+```
+
+3.- Renombrar `Ev.` a `Parcial 3` (mostrar el `data.frame` resultante).
+```{r, eval=TRUE}
+Parcial3 <- "Parcial3"
+Parcial1 <- "Parcial1"
+Parcial2 <- "Parcial2"
+tablaAlumnos[1, 6] <- Parcial3
+tablaAlumnos[1, 4] <- Parcial1
+tablaAlumnos[1, 5] <- Parcial2
+print(tablaAlumnos)
+```
+
+4.- Graficar `No` contra `Parcial 1`, `Parcial 2`.
+```{r}
+library(scatterplot3d)
+scatterplot3d(tablaAlumnos$V1, tablaAlumnos$V4, tablaAlumnos$V5,
+              main = "Relación No vs Parcial 1 y Parcial 2",
+              xlab = "No", ylab = "Parcial 1", zlab = "Parcial 2",
+              color = "blue", pch = 16)
+```
+
+5.- ¿Cuál es la media de las calificaciones finales? ¿Quién obtuvo la calificación más baja? ¿Quién obtuvo el mejor promedio? (anexar el código que lo calcula).
+```{r}
+#Tuve que renombrar las columnas
+nuevos_nombres <- tablaAlumnos[1, , drop = TRUE]
+colnames(tablaAlumnos) <- nuevos_nombres
+tablaAlumnos <- tablaAlumnos[-1, ]
+
+#Calificación más baja
+calfmedia <- mean(tablaAlumnos$Calif., na.rm = TRUE)
+calfbaja <- min(tablaAlumnos$Calif.)
+calfmejor <- max(tablaAlumnos$Calif.)
+
+#Imprimir resultados
+print(paste("Media Calificacion:", calfmedia))
+print(paste("Calificación más baja:", calfbaja))
+print(paste("La mejor Calificiación:", calfmejor))
+```
+
+6.- Cree una nueva columna llamada `promedio` (esto lo puede hacer con `mutate` del paquete `dplyr`) y compárela con la columna `Calif.` (¿Qué se puede observar?).
+```{r}
+
+tablaAlumnos$Calif. <- as.numeric(tablaAlumnos$Calif.)
+valores_no_numericos <- tablaAlumnos$Calif.[!is.na(tablaAlumnos$Calif.) & !is.numeric(tablaAlumnos$Calif.)]
+if (length(valores_no_numericos) > 0) {
+  print(paste("Valores no numéricos encontrados en 'Calif.':", toString(valores_no_numericos)))
+} else {
+  tablaAlumnos <- tablaAlumnos %>%
+    mutate(promedio = 2 * Calif.)
+  print(head(tablaAlumnos))
+}
+```
+
+Se observa la suma de los valores
+
+
+# Ejercicios CSV
+
+Posteriormente lea el archivo `it0103_2016_01.csv` (lo puede hacer mediante el comando `read.csv()`) el cual es una versión `sucia` del archivo anterior y replique cada uno de los puntos de arriba (sí es necesario modifique el data.frame resultante).
+
+```{r}
+csv_path <- "F:/ESTADISTICA/TAREAS FINALIZADAS/TAREA 3 - 20_SEP - lectura de archivos/it0103_2016_01.csv"
+resultados_csv <- read.csv(csv_path)
+print(resultados_csv)
+```
+
+1.- Graficar `No` contra `Calif.`.
+```{r, eval=TRUE}
+datoscsv <- resultados_csv
+plot(datoscsv$No, datoscsv$Calif., main = "Calificaciones Parcial 1", xlab = "No", ylab = "Calif.")
+```
+
+2.- Graficar `No` contra `Calificacion`.
+```{r, eval=TRUE}
+datoscsv <- resultados_csv
+plot(datoscsv$No, datoscsv$Calificacion, main = "Calificaciones Parcial 1", xlab = "No", ylab = "Calif.")
+```
+3.- Renombrar `Ev.` a `Parcial 3` (mostrar el `data.frame` resultante).
+```{r, eval=TRUE}
+colnames(resultados_csv)[colnames(resultados_csv) == "Examen"] <- "Parcial"
+print(resultados_csv)
+```
+
+4.- Graficar `No` contra `Calif.`, `Calificacion`.
+```{r, eval=TRUE}
+library(scatterplot3d)
+scatterplot3d(resultados_csv$No, resultados_csv$Calif., resultados_csv$Calificacion,
+              main = "Relación No vs Parcial Calif. y Calificacion",
+              xlab = "No", ylab = "Calif.", zlab = "Calificacion",
+              color = "blue", pch = 16)
+```
+
+5.- ¿Cuál es la media de las calificaciones finales? ¿Quién obtuvo la calificación más baja? ¿Quién obtuvo el mejor promedio? (anexar el código que lo calcula).
+```{r}
+#Calificación más baja
+calfmedia_csv <- mean(resultados_csv$Calificacion, na.rm = TRUE)
+calfbaja_csv <- min(resultados_csv$Calificacion)
+calfmejor_csv <- max(resultados_csv$Calificacion)
+
+#Imprimir resultados
+print(paste("Media Calificacion:", calfmedia_csv))
+print(paste("Calificación más baja:", calfbaja_csv))
+print(paste("La mejor Calificiación:", calfmejor_csv))
+```
+
+6.- Cree una nueva columna llamada `promedio` (esto lo puede hacer con `mutate` del paquete `dplyr`) y compárela con la columna `Calificacion` (¿Qué se puede observar?).
+```{r}
+resultados_csv <- resultados_csv %>%
+  mutate(promedio = mean(Calificacion, na.rm = TRUE))
+print(resultados_csv)
+```
+
+Se puede observar un promedio más ajustado en realación al anterior
